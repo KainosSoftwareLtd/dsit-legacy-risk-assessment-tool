@@ -1,6 +1,6 @@
 # Legacy IT Risk Assessment Tool
 
-A browser-based, single-page application for assessing UK government IT systems against the [CDDO Legacy IT Risk Assessment Framework](https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework). Built using GOV.UK Frontend.
+A browser-based, single-page application for assessing UK government IT systems against the [Legacy IT Risk Assessment Framework](https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework). Built using GOV.UK Frontend.
 
 ## What it does
 
