@@ -282,7 +282,7 @@ const STATUS = Object.freeze({
 /**
  * scoring.js
  * Pure scoring calculation functions — no DOM dependencies.
- * Formula from CDDO guidance:
+ * Formula from the Legacy IT Risk Assessment Framework guidance:
  *   total = (mean of all scores + max single score) / 2
  *   overall = likelihood_total × impact_total
  */
@@ -432,7 +432,7 @@ function buildCSVString(portfolio) {
     'Overall Risk Score',
     'Is Legacy',
     'Is Red-Rated',
-    // Remediation (CDDO register fields)
+    // Remediation
     'Has Remediation Plan',
     'Remediation Plan Funded',
     'Target Resolution Date',
@@ -550,7 +550,7 @@ const STATUS_META = {
   [STATUS.UNSCORED]:   { label: 'Not yet scored', tagClass: 'govuk-tag--grey',   description: 'Complete all criteria to see the result.' },
   [STATUS.NOT_LEGACY]: { label: 'Not Legacy',     tagClass: 'govuk-tag--green',  description: 'No likelihood criterion scored 3 or above. Not currently classified as a legacy system.' },
   [STATUS.LEGACY]:     { label: 'Legacy',         tagClass: 'govuk-tag--yellow', description: 'At least one likelihood criterion scored 3 (Medium) or above. This system is classified as Legacy.' },
-  [STATUS.RED_RATED]:  { label: 'Red-Rated',      tagClass: 'govuk-tag--red',    description: 'Overall risk score is 16 or above. This is a Red-Rated system and must be added to the CDDO Legacy IT Asset Register.' },
+  [STATUS.RED_RATED]:  { label: 'Red-Rated',      tagClass: 'govuk-tag--red',    description: 'Overall risk score is 16 or above. This is a Red-Rated system and must be added to the Legacy IT Asset Register.' },
 };
 
 // ---------------------------------------------------------------------------
@@ -622,14 +622,14 @@ function renderBeforeYouStart(hasDraft) {
       + '</button>';
   }
   return '<h2 class="govuk-heading-l">Assess a system</h2>'
-    + '<p class="govuk-body">Use this tool to assess your legacy IT systems against the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer">CDDO Legacy IT Risk Assessment Framework</a>. All guidance is included — select the <strong>Guidance</strong> tab if you need it.</p>'
+    + '<p class="govuk-body">Use this tool to assess your legacy IT systems against the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer">Legacy IT Risk Assessment Framework</a>. All guidance is included \u2014 select the <strong>Guidance</strong> tab if you need it.</p>'
     + '<div class="govuk-inset-text"><h3 class="govuk-heading-s">Before you start</h3>'
-    + '<p class="govuk-body">This tool implements the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer"><strong>CDDO Legacy IT Risk Assessment Framework</strong></a>. '
+    + '<p class="govuk-body">This tool implements the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer"><strong>Legacy IT Risk Assessment Framework</strong></a>. '
     + 'Assessments cover a <strong>3-year horizon</strong> and use expert judgement based on available information.</p>'
     + '<p class="govuk-body">A system should be considered for assessment if it shows any of these indicators:</p>'
     + '<ul class="govuk-list govuk-list--bullet">' + indicators + '</ul>'
     + '<p class="govuk-body govuk-!-margin-bottom-0"><strong>Legacy</strong>: any single Likelihood score \u2265 3 (Medium).<br>'
-    + '<strong>Red-Rated</strong>: overall risk score \u2265 16 \u2014 must be added to the CDDO Legacy IT Asset Register.</p>'
+    + '<strong>Red-Rated</strong>: overall risk score \u2265 16 \u2014 must be added to the Legacy IT Asset Register.</p>'
     + '</div>'
     + '<p class="govuk-body">You will answer <strong>15 questions</strong> (system details, 7 Likelihood criteria, 6 Impact criteria, remediation info), '
     + 'then see your result. Your progress is saved automatically.</p>'
@@ -655,7 +655,7 @@ function renderSystemDetailsStep(draft, stepNum, returnToSummary) {
     + '<input class="govuk-input" id="sys-assessor" name="sys-assessor" type="text" value="' + esc(draft.assessor) + '" autocomplete="name"></div>'
     + '<div class="govuk-form-group" id="fg-sys-owner">'
     + '<label class="govuk-label govuk-label--s" for="sys-owner">System owner</label>'
-    + '<div class="govuk-hint">Name of the person accountable for this asset in the department (required for submission to the CDDO Legacy IT Asset Register).</div>'
+    + '<div class="govuk-hint">Name of the person accountable for this asset in the department (required for submission to the Legacy IT Asset Register).</div>'
     + '<input class="govuk-input" id="sys-owner" name="sys-owner" type="text" value="' + esc(draft.systemOwner) + '" autocomplete="name"></div>'
     + '<div class="govuk-form-group" id="fg-sys-date">'
     + '<label class="govuk-label govuk-label--s" for="sys-date">Date assessed *</label>'
@@ -734,7 +734,7 @@ function renderRemediationStep(draft, stepNum, returnToSummary) {
   function chk(field, val) { return draft[field] === val ? ' checked' : ''; }
   return renderStepChrome('Remediation', stepNum, returnToSummary)
     + '<h2 class="govuk-heading-l">Remediation information</h2>'
-    + '<p class="govuk-body">These fields are required for Red-Rated systems on the CDDO Legacy IT Asset Register. All fields on this page are optional.</p>'
+    + '<p class="govuk-body">These fields are required for Red-Rated systems on the Legacy IT Asset Register. All fields on this page are optional.</p>'
     + '<div class="govuk-form-group"><fieldset class="govuk-fieldset">'
     + '<legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Does a remediation plan exist?</legend>'
     + '<div class="govuk-radios govuk-radios--inline govuk-radios--small">'
@@ -759,7 +759,7 @@ function renderRemediationStep(draft, stepNum, returnToSummary) {
     + '<div class="govuk-form-group"><label class="govuk-label govuk-label--s" for="sys-notes">Additional notes</label>'
     + '<textarea class="govuk-textarea" id="sys-notes" name="sys-notes" rows="3">' + esc(draft.notes) + '</textarea></div>'
     + '<div class="govuk-form-group"><label class="govuk-label govuk-label--s" for="sys-milestones">Key remediation milestones</label>'
-    + '<div class="govuk-hint">List the main milestones with target dates, e.g. "Procurement decision by Q2 2026, migration complete by Q4 2027". Required for Red-Rated systems on the CDDO register.</div>'
+    + '<div class="govuk-hint">List the main milestones with target dates, e.g. "Procurement decision by Q2 2026, migration complete by Q4 2027". Required for Red-Rated systems on the register.</div>'
     + '<textarea class="govuk-textarea" id="sys-milestones" name="sys-milestones" rows="3">' + esc(draft.remediationMilestones) + '</textarea></div>'
     + renderWizardFooter(stepNum, returnToSummary);
 }
@@ -779,7 +779,7 @@ function renderResultStep(result, draft) {
     + '<p class="govuk-body govuk-!-margin-bottom-2" style="color:' + COLOUR.GREY_TEXT + '">out of a maximum of ' + THRESHOLDS.maxOverall + '</p>'
     + '<strong class="govuk-tag ' + meta.tagClass + '" style="font-size:1rem;padding:6px 10px">' + meta.label + '</strong>'
     + '<p class="govuk-body govuk-!-margin-top-2 govuk-!-margin-bottom-0">' + meta.description + '</p></div>'
-    + (result.isRedRated ? '<div class="govuk-warning-text"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text"><span class="govuk-visually-hidden">Warning</span>This system is Red-Rated and must be added to the CDDO Legacy IT Asset Register.</strong></div>' : '')
+    + (result.isRedRated ? '<div class="govuk-warning-text"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text"><span class="govuk-visually-hidden">Warning</span>This system is Red-Rated and must be added to the Legacy IT Asset Register.</strong></div>' : '')
     + '<dl class="govuk-summary-list" style="margin-bottom:2rem">'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Likelihood total</dt>'
     + '<dd class="govuk-summary-list__value">' + result.likelihood.total + ' <span class="govuk-body-s" style="color:' + COLOUR.GREY_TEXT + '">(mean ' + result.likelihood.mean + ', max ' + result.likelihood.max + ')</span></dd></div>'
@@ -902,7 +902,7 @@ function renderPortfolioTab(container, portfolio) {
   const isEmpty = portfolio.length === 0;
   container.innerHTML = '<h2 class="govuk-heading-m">Your portfolio</h2>'
     + '<div class="govuk-button-group app-portfolio-actions">'
-    + '<button class="govuk-button govuk-button--secondary" id="btn-save-session">Export session (JSON)</button>'
+    + '<button class="govuk-button govuk-button--secondary" id="btn-save-session">Save session (JSON)</button>'
     + '<button class="govuk-button govuk-button--secondary" id="btn-load-session">Load session (JSON)</button>'
     + '<button class="govuk-button govuk-button--secondary" id="btn-export-csv"' + (isEmpty ? ' disabled aria-disabled="true"' : '') + '>Export CSV</button>'
     + '</div>'
@@ -1157,7 +1157,7 @@ function renderRiskMatrix(portfolio) {
 function renderGuidanceTab(container) {
   function li(items) { return items.map(function(i){ return '<li>'+i+'</li>'; }).join(''); }
 
-  // Worked example data — fictional system from CDDO guidance (scores as per spec)
+  // Worked example data — fictional system from the guidance (scores as per spec)
   const exampleLScores = { L1:5, L2:5, L3:5, L4:5, L5:6, L6:6, L7:6 };
   const exampleIScores = { C1:5, C2:5, C3:2, C4:5, C5:5, C6:4 };
   const exampleLRows = LIKELIHOOD_CRITERIA.map(function(c) {
@@ -1183,7 +1183,7 @@ function renderGuidanceTab(container) {
     + accordionSection('guidance-2','What is the Legacy IT Risk Assessment Framework?',
         '<p class="govuk-body">The framework provides a structured approach for evaluating and prioritising the risks associated with outdated IT systems within government departments.</p>'
         + '<h4 class="govuk-heading-s">What does \u2018Red-Rated\u2019 mean?</h4>'
-        + '<p class="govuk-body">A red-rated system has an <strong>overall risk score of 16 or above</strong> (out of a maximum of 30). Red-rated systems must have agreed remediation plans and be registered on the CDDO Legacy IT Asset Register.</p>')
+        + '<p class="govuk-body">A red-rated system has an <strong>overall risk score of 16 or above</strong> (out of a maximum of 30). Red-rated systems must have agreed remediation plans and be registered on the Legacy IT Asset Register.</p>')
     + accordionSection('guidance-3','How to use the framework',
         '<p class="govuk-body">Assessments cover an assumed <strong>3-year period</strong>.</p>'
         + '<ol class="govuk-list govuk-list--number">'
@@ -1192,7 +1192,7 @@ function renderGuidanceTab(container) {
         + '<li><strong>Impact assessment</strong> \u2014 score each of the 6 Impact criteria (C1\u2013C6) using the 1\u20135 scale.</li>'
         + '<li><strong>Aggregate scores</strong> \u2014 for each category: <em>total = (mean + max) \u00f7 2</em>. Then multiply Likelihood total \u00d7 Impact total.</li>'
         + '<li><strong>Risk categorisation</strong> \u2014 overall \u2265 16: Red-Rated. Any single L score \u2265 3 but overall &lt; 16: Legacy. Otherwise: Not Legacy.</li>'
-        + '<li><strong>Submit to CDDO</strong> \u2014 all ministerial departments must submit assessments annually.</li>'
+        + '<li><strong>Submit assessments</strong> \u2014 all ministerial departments must submit assessments annually.</li>'
         + '</ol>'
         + '<div class="govuk-inset-text">'
         + '<p class="govuk-body govuk-!-margin-bottom-1"><strong>Likelihood total</strong> = (mean of L1\u2013L7 + max of L1\u2013L7) \u00f7 2</p>'
@@ -1203,8 +1203,8 @@ function renderGuidanceTab(container) {
     + accordionSection('guidance-5','Full scoring tables \u2014 Impact (C1\u2013C6)',renderCriteriaTable(IMPACT_CRITERIA, 5))
     + accordionSection('guidance-6','Worked example \u2014 HR Management Plus',
         renderWorkedExampleSection(exampleLRows, exampleIRows))
-    + accordionSection('guidance-7','CDDO Legacy IT Asset Register',
-        '<p class="govuk-body">All ministerial departments are mandated to provide all legacy IT assessments to CDDO each year.</p>'
+    + accordionSection('guidance-7','Legacy IT Asset Register',
+        '<p class="govuk-body">All ministerial departments are mandated to provide all legacy IT assessments each year.</p>'
         + '<p class="govuk-body">Contact: <a class="govuk-link" href="mailto:technology.management@digital.cabinet-office.gov.uk">technology.management@digital.cabinet-office.gov.uk</a></p>')
     + accordionSection('guidance-8','Best practice for treating legacy systems',
         '<ul class="govuk-list govuk-list--bullet">'
@@ -1223,7 +1223,7 @@ function renderGuidanceTab(container) {
 // Builds the HTML body for the 'Worked example' accordion section.
 // Kept separate from renderGuidanceTab to reduce its line count.
 function renderWorkedExampleSection(exampleLRows, exampleIRows) {
-  return '<p class="govuk-body">This fictional example is taken directly from the CDDO guidance. It shows how to apply the framework from initial scores through to a final risk classification.</p>'
+  return '<p class="govuk-body">This fictional example is taken directly from the guidance. It shows how to apply the framework from initial scores through to a final risk classification.</p>'
     + '<dl class="govuk-summary-list govuk-summary-list--no-border govuk-!-margin-bottom-4">'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Department</dt><dd class="govuk-summary-list__value">Ministry of Space Transport Infrastructure</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">System</dt><dd class="govuk-summary-list__value">HR Management Plus</dd></div>'
@@ -1289,7 +1289,7 @@ function renderWorkedExampleSection(exampleLRows, exampleIRows) {
     + '<tr class="govuk-table__row"><td class="govuk-table__cell">Red-Rated</td><td class="govuk-table__cell">Overall &ge; 16</td><td class="govuk-table__cell">26.67 &ge; 16 &mdash; <strong>yes</strong></td><td class="govuk-table__cell"><strong class="govuk-tag govuk-tag--red">Red-Rated</strong></td></tr>'
     + '<tr class="govuk-table__row"><td class="govuk-table__cell">Legacy</td><td class="govuk-table__cell">Any single L score &ge; 3</td><td class="govuk-table__cell">All L scores &ge; 5</td><td class="govuk-table__cell"><strong class="govuk-tag govuk-tag--orange">Legacy</strong> (also applies)</td></tr>'
     + '</tbody></table>'
-    + '<p class="govuk-body">Because the overall score of 26.67 meets the Red-Rated threshold (16+), this system is classified as <strong>Red-Rated</strong> and must have an agreed remediation plan and be registered on the CDDO Legacy IT Asset Register.</p>';
+    + '<p class="govuk-body">Because the overall score of 26.67 meets the Red-Rated threshold (16+), this system is classified as <strong>Red-Rated</strong> and must have an agreed remediation plan and be registered on the Legacy IT Asset Register.</p>';
 }
 
 function renderCriteriaTable(criteria, maxScore) {
@@ -1869,6 +1869,8 @@ function wirePortfolioTab() {
     if (action === 'remove') {
       e.preventDefault();
       if (!isNaN(idx)) {
+        const sysName = portfolio[idx] ? portfolio[idx].name : 'this system';
+        if (!confirm('Are you sure you want to remove "' + sysName + '" from your portfolio? This cannot be undone.')) return;
         portfolio.splice(idx, 1);
         savePortfolioToStorage(portfolio);
         refreshPortfolioTab();
