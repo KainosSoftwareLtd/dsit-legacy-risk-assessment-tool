@@ -21,6 +21,13 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low likelihood technology will be out of support within 3 years' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low likelihood technology will be out of support within 3 years' },
     ],
+    examples: [
+      'Operating systems no longer receiving security patches (e.g. Windows Server 2012, RHEL 6)',
+      'Programming language runtimes past end-of-life (e.g. Python 2, Java 8 extended support expiry)',
+      'Frameworks or libraries abandoned by maintainers with no migration path',
+      'Database engines no longer under vendor support agreements (e.g. Oracle 10g, SQL Server 2008)',
+      'Middleware or integration platforms that cannot be upgraded',
+    ],
   },
   {
     code: 'L2',
@@ -34,6 +41,13 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low likelihood vendor contracts will expire with no replacement agreement in place' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low likelihood vendor contracts will expire with no replacement agreement in place' },
     ],
+    extraField: {
+      key: 'contractExpiryDate',
+      label: 'Contract expiry date',
+      hint: 'When does the current vendor or support contract expire? Leave blank if unknown.',
+      type: 'date',
+      inputClass: 'govuk-input--width-10',
+    },
   },
   {
     code: 'L3',
@@ -47,6 +61,18 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low likelihood that expertise to provide support or make changes to the asset will become an issue' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low likelihood that expertise to provide support or make changes to the asset will become an issue' },
     ],
+    extraField: {
+      key: 'keyPersonRisk',
+      label: 'Key-person risk',
+      hint: 'How many people can currently maintain and support this system?',
+      type: 'select',
+      options: [
+        { value: '', label: 'Select an option' },
+        { value: 'Single point of failure', label: 'Single point of failure \u2014 1 person' },
+        { value: 'Small team', label: 'Small team \u2014 2 to 3 people' },
+        { value: 'Adequate coverage', label: 'Adequate coverage \u2014 4 or more people' },
+      ],
+    },
   },
   {
     code: 'L4',
@@ -60,6 +86,13 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low likelihood that the system will be unable to meet its business needs' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low likelihood that the system will be unable to meet its business needs' },
     ],
+    extraField: {
+      key: 'capabilityGaps',
+      label: 'Known capability gaps',
+      hint: 'What business needs does this system currently fail to meet, or what changes can it not accommodate?',
+      type: 'textarea',
+      rows: 2,
+    },
   },
   {
     code: 'L5',
@@ -73,6 +106,20 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low level of concern regarding the suitability of the hardware or physical environment' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low level of concern regarding the suitability of the hardware or physical environment' },
     ],
+    extraField: {
+      key: 'hostingType',
+      label: 'Hosting type',
+      hint: 'Where is this system primarily hosted?',
+      type: 'select',
+      options: [
+        { value: '', label: 'Select an option' },
+        { value: 'On-premise', label: 'On-premise' },
+        { value: 'Co-located', label: 'Co-located data centre' },
+        { value: 'Cloud (public)', label: 'Cloud \u2014 public (AWS, Azure, GCP)' },
+        { value: 'Cloud (private)', label: 'Cloud \u2014 private / Crown Hosting' },
+        { value: 'Hybrid', label: 'Hybrid' },
+      ],
+    },
   },
   {
     code: 'L6',
@@ -86,6 +133,13 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Low likelihood that security vulnerabilities exist' },
       { score: 1, label: 'Very Low',  descriptor: 'Very low likelihood that security vulnerabilities exist' },
     ],
+    extraField: {
+      key: 'lastSecurityAssessment',
+      label: 'Last security assessment date',
+      hint: 'When was this system last subject to a vulnerability scan, penetration test, or IT Health Check? Leave blank if unknown or never.',
+      type: 'date',
+      inputClass: 'govuk-input--width-10',
+    },
   },
   {
     code: 'L7',
@@ -99,6 +153,14 @@ const LIKELIHOOD_CRITERIA = [
       { score: 2, label: 'Low',       descriptor: 'Minor issues or failures are known to have occurred in the recent past' },
       { score: 1, label: 'Very Low',  descriptor: 'No issues or failures are known to have occurred in the recent past' },
     ],
+    extraField: {
+      key: 'majorIncidents24m',
+      label: 'P1/P2 incidents in last 24 months',
+      hint: 'Count of major incidents (severity 1 or 2) in the last 24 months. Enter 0 if none.',
+      type: 'number',
+      inputClass: 'govuk-input--width-5',
+      min: 0,
+    },
   },
 ];
 
@@ -345,10 +407,17 @@ function buildCSVString(portfolio) {
     'Asset Name',
     'Department',
     'Assessor',
+    'System Owner',
     'Date Assessed',
     'Asset Description',
     'Legacy Components',
     'Services Supported',
+    'Contract Expiry Date',
+    'Key-Person Risk',
+    'Capability Gaps',
+    'Hosting Type',
+    'Last Security Assessment',
+    'P1/P2 Incidents (24m)',
     // Likelihood raw scores
     ...lCodes.map(c => `${c} Score`),
     'Likelihood Mean',
@@ -369,6 +438,7 @@ function buildCSVString(portfolio) {
     'Target Resolution Date',
     'Estimated Cost Change (%)',
     'Notes',
+    'Remediation Milestones',
   ];
 
   const rows = portfolio.map(sys => {
@@ -380,10 +450,17 @@ function buildCSVString(portfolio) {
       sys.name,
       sys.department,
       sys.assessor,
+      sys.systemOwner,
       sys.dateAssessed,
       sys.description,
       sys.legacyComponents,
       sys.services,
+      sys.contractExpiryDate,
+      sys.keyPersonRisk,
+      sys.capabilityGaps,
+      sys.hostingType,
+      sys.lastSecurityAssessment,
+      sys.majorIncidents24m,
       ...lScores,
       r.likelihood?.mean ?? '',
       r.likelihood?.max  ?? '',
@@ -400,6 +477,7 @@ function buildCSVString(portfolio) {
       sys.targetResolutionDate,
       sys.estimatedCostChange,
       sys.notes,
+      sys.remediationMilestones,
     ].map(csvCell);
   });
 
@@ -544,6 +622,7 @@ function renderBeforeYouStart(hasDraft) {
       + '</button>';
   }
   return '<h2 class="govuk-heading-l">Assess a system</h2>'
+    + '<p class="govuk-body">Use this tool to assess your legacy IT systems against the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer">CDDO Legacy IT Risk Assessment Framework</a>. All guidance is included — select the <strong>Guidance</strong> tab if you need it.</p>'
     + '<div class="govuk-inset-text"><h3 class="govuk-heading-s">Before you start</h3>'
     + '<p class="govuk-body">This tool implements the <a class="govuk-link" href="https://www.gov.uk/government/publications/guidance-on-the-legacy-it-risk-assessment-framework" target="_blank" rel="noopener noreferrer"><strong>CDDO Legacy IT Risk Assessment Framework</strong></a>. '
     + 'Assessments cover a <strong>3-year horizon</strong> and use expert judgement based on available information.</p>'
@@ -574,6 +653,10 @@ function renderSystemDetailsStep(draft, stepNum, returnToSummary) {
     + '<div class="govuk-form-group" id="fg-sys-assessor">'
     + '<label class="govuk-label govuk-label--s" for="sys-assessor">Assessor name *</label>'
     + '<input class="govuk-input" id="sys-assessor" name="sys-assessor" type="text" value="' + esc(draft.assessor) + '" autocomplete="name"></div>'
+    + '<div class="govuk-form-group" id="fg-sys-owner">'
+    + '<label class="govuk-label govuk-label--s" for="sys-owner">System owner</label>'
+    + '<div class="govuk-hint">Name of the person accountable for this asset in the department (required for submission to the CDDO Legacy IT Asset Register).</div>'
+    + '<input class="govuk-input" id="sys-owner" name="sys-owner" type="text" value="' + esc(draft.systemOwner) + '" autocomplete="name"></div>'
     + '<div class="govuk-form-group" id="fg-sys-date">'
     + '<label class="govuk-label govuk-label--s" for="sys-date">Date assessed *</label>'
     + '<div class="govuk-hint">For example, 2026-02-25</div>'
@@ -626,10 +709,12 @@ function renderWizardCriterionStep(criterion, cat, sectionLabel, stepNum, draft,
     + '<h2 class="govuk-heading-l">' + criterion.code + ' \u2014 ' + criterion.name + '</h2>'
     + '<p class="govuk-body govuk-hint" style="margin-bottom:0.5rem">' + criterion.description + '</p>'
     + contextNote
+    + renderExamplesPanel(criterion)
     + '<div class="govuk-form-group" id="fg-criterion"><fieldset class="govuk-fieldset">'
     + '<legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Select the most appropriate score</legend>'
     + '<div class="govuk-radios" id="' + name + '-radios">' + radios + '</div>'
     + '</fieldset></div>'
+    + renderExtraField(criterion, draft)
     + '<details class="govuk-details" style="margin-bottom:1.5rem">'
     + '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">Full scoring table for ' + criterion.code + '</span></summary>'
     + '<div class="govuk-details__text" style="overflow-x:auto">'
@@ -673,6 +758,9 @@ function renderRemediationStep(draft, stepNum, returnToSummary) {
     + '<div class="govuk-input__suffix" aria-hidden="true">%</div></div></div>'
     + '<div class="govuk-form-group"><label class="govuk-label govuk-label--s" for="sys-notes">Additional notes</label>'
     + '<textarea class="govuk-textarea" id="sys-notes" name="sys-notes" rows="3">' + esc(draft.notes) + '</textarea></div>'
+    + '<div class="govuk-form-group"><label class="govuk-label govuk-label--s" for="sys-milestones">Key remediation milestones</label>'
+    + '<div class="govuk-hint">List the main milestones with target dates, e.g. "Procurement decision by Q2 2026, migration complete by Q4 2027". Required for Red-Rated systems on the CDDO register.</div>'
+    + '<textarea class="govuk-textarea" id="sys-milestones" name="sys-milestones" rows="3">' + esc(draft.remediationMilestones) + '</textarea></div>'
     + renderWizardFooter(stepNum, returnToSummary);
 }
 
@@ -723,10 +811,16 @@ function renderSummaryPage(sys, portfolioIdx) {
   }
 
   const lRows = LIKELIHOOD_CRITERIA.map(function(c, i) {
-    return '<div class="govuk-summary-list__row">'
+    var row = '<div class="govuk-summary-list__row">'
       + '<dt class="govuk-summary-list__key">' + c.code + ' \u2014 ' + c.name + '</dt>'
       + '<dd class="govuk-summary-list__value">' + scoreVal(sys.likelihoodScores, c.code, c.levels) + '</dd>'
       + '<dd class="govuk-summary-list__actions">' + changeLink(i + 2) + '</dd></div>';
+    if (c.extraField && sys[c.extraField.key]) {
+      row += '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key" style="padding-left:2em">\u21b3 ' + c.extraField.label + '</dt>'
+        + '<dd class="govuk-summary-list__value">' + esc(sys[c.extraField.key]) + '</dd>'
+        + '<dd class="govuk-summary-list__actions">' + changeLink(i + 2) + '</dd></div>';
+    }
+    return row;
   }).join('');
 
   const iRows = IMPACT_CRITERIA.map(function(c, i) {
@@ -754,6 +848,7 @@ function renderSummaryPage(sys, portfolioIdx) {
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Asset name</dt><dd class="govuk-summary-list__value">' + esc(sys.name) + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Department</dt><dd class="govuk-summary-list__value">' + esc(sys.department) + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Assessor</dt><dd class="govuk-summary-list__value">' + esc(sys.assessor) + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
+    + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">System owner</dt><dd class="govuk-summary-list__value">' + esc(sys.systemOwner || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Date assessed</dt><dd class="govuk-summary-list__value">' + esc(sys.dateAssessed) + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Description</dt><dd class="govuk-summary-list__value">' + esc(sys.description || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Legacy components</dt><dd class="govuk-summary-list__value">' + esc(sys.legacyComponents || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(1) + '</dd></div>'
@@ -770,6 +865,7 @@ function renderSummaryPage(sys, portfolioIdx) {
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Target resolution date</dt><dd class="govuk-summary-list__value">' + esc(sys.targetResolutionDate || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(15) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Estimated cost change</dt><dd class="govuk-summary-list__value">' + (sys.estimatedCostChange ? sys.estimatedCostChange + '%' : '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(15) + '</dd></div>'
     + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Notes</dt><dd class="govuk-summary-list__value">' + esc(sys.notes || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(15) + '</dd></div>'
+    + '<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Remediation milestones</dt><dd class="govuk-summary-list__value">' + esc(sys.remediationMilestones || '\u2014') + '</dd><dd class="govuk-summary-list__actions">' + changeLink(15) + '</dd></div>'
     + '</dl>'
     + '<div class="govuk-button-group govuk-!-margin-top-4">'
     + '<button class="govuk-button govuk-button--secondary" id="btn-back-to-portfolio-btn">Back to portfolio</button></div>';
@@ -806,7 +902,7 @@ function renderPortfolioTab(container, portfolio) {
   const isEmpty = portfolio.length === 0;
   container.innerHTML = '<h2 class="govuk-heading-m">Your portfolio</h2>'
     + '<div class="govuk-button-group app-portfolio-actions">'
-    + '<button class="govuk-button govuk-button--secondary" id="btn-save-session">Save session (JSON)</button>'
+    + '<button class="govuk-button govuk-button--secondary" id="btn-save-session">Export session (JSON)</button>'
     + '<button class="govuk-button govuk-button--secondary" id="btn-load-session">Load session (JSON)</button>'
     + '<button class="govuk-button govuk-button--secondary" id="btn-export-csv"' + (isEmpty ? ' disabled aria-disabled="true"' : '') + '>Export CSV</button>'
     + '</div>'
@@ -928,33 +1024,109 @@ function renderRiskMatrix(portfolio) {
   // Colour palette for system dots — cycles through for portfolios with many systems.
   const DOT_COLOURS = ['#003078','#00703c','#4c2c92','#6f3605','#28a197','#912b88'];
 
-  // Render each fully-scored system as a labelled circle on the matrix.
+  // Pre-filter to only fully-scored systems so dot numbers match legend row numbers.
+  const scoredSystems = portfolio.filter(function(sys) {
+    return sys.result && sys.result.allScored;
+  });
+
+  // Render numbered dots (pass 1) and tooltip hover-targets (pass 2) as separate layers
+  // so tooltips always paint above all dots regardless of document order.
   function buildSystemDots() {
-    return portfolio.map(function(sys, idx) {
-      const r = sys.result;
-      if (!r || !r.allScored) return '';
-      const x = toX(r.likelihood.total), y = toY(r.impact.total);
+    // Pass 1 — visible circles + index numbers only.
+    const circles = scoredSystems.map(function(sys, idx) {
+      const res = sys.result;
+      const cx = toX(res.likelihood.total), cy = toY(res.impact.total);
       const col = DOT_COLOURS[idx % DOT_COLOURS.length];
-      const nm  = sys.name.length > 14 ? sys.name.slice(0, 13) + '\u2026' : sys.name;
-      return '<g role="img" aria-label="' + esc(sys.name) + '">'
-        + '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" fill="'+col+'" stroke="#fff" stroke-width="2"/>'
-        + '<text x="'+x.toFixed(1)+'" y="'+(y - 13).toFixed(1)+'" text-anchor="middle"'
-        + ' style="font-size:10px;font-weight:bold;fill:#fff;paint-order:stroke;stroke:#333;stroke-width:3px">'+esc(nm)+'</text>'
-        + '<title>'+esc(sys.name)+' \u2014 Likelihood: '+r.likelihood.total+', Impact: '+r.impact.total+', Overall: '+r.overall+'</title>'
+      const num = String(idx + 1);
+      const cr = num.length > 1 ? 11 : 9;
+      return '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + cr
+        + '" fill="' + col + '" stroke="#fff" stroke-width="2"/>'
+        + '<text x="' + cx.toFixed(1) + '" y="' + (cy + 4).toFixed(1) + '" text-anchor="middle"'
+        + ' style="font-size:9px;font-weight:bold;fill:#fff;pointer-events:none">' + num + '</text>';
+    }).join('');
+
+    // Pass 2 — invisible hit-target circles + tooltip panels, rendered after all circles
+    // so they sit on top in SVG z-order.
+    const tips = scoredSystems.map(function(sys, idx) {
+      const res = sys.result;
+      const cx = toX(res.likelihood.total), cy = toY(res.impact.total);
+      const col = DOT_COLOURS[idx % DOT_COLOURS.length];
+      const num = String(idx + 1);
+      const cr = num.length > 1 ? 11 : 9;
+
+      const ttW = 224, ttH = 46, ttPad = 7;
+      const ttX = (cx + cr + 10 + ttW) > (W - mr) ? cx - cr - 12 - ttW : cx + cr + 10;
+      const ttY = Math.max(mt + 2, Math.min(H - mb - ttH - 2, cy - ttH / 2));
+      const ttName = sys.name.length > 33 ? sys.name.slice(0, 32) + '\u2026' : sys.name;
+      const ttScore = 'L\u2009' + res.likelihood.total + '\u2002\u2022\u2002I\u2009' + res.impact.total + '\u2002\u2022\u2002Overall\u2009' + res.overall;
+
+      return '<g role="img" aria-label="' + esc(sys.name) + '" class="rm-dot" tabindex="0">'
+        + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + cr + '" fill="transparent" stroke="none"/>'
+        + '<g class="rm-tip">'
+        + '<rect x="' + ttX.toFixed(1) + '" y="' + ttY.toFixed(1) + '" width="' + ttW + '" height="' + ttH
+        + '" rx="3" fill="#0b0c0c" opacity="0.92"/>'
+        + '<text x="' + (ttX + ttPad).toFixed(1) + '" y="' + (ttY + 16).toFixed(1)
+        + '" style="font-size:11px;font-weight:bold;fill:#fff">' + esc(ttName) + '</text>'
+        + '<text x="' + (ttX + ttPad).toFixed(1) + '" y="' + (ttY + 34).toFixed(1)
+        + '" style="font-size:10px;fill:#ccc">' + esc(ttScore) + '</text>'
+        + '</g>'
+        + '<title>' + esc(sys.name) + ' \u2014 Likelihood: ' + res.likelihood.total + ', Impact: ' + res.impact.total + ', Overall: ' + res.overall + '</title>'
         + '</g>';
     }).join('');
+
+    return '<g>' + circles + '</g><g>' + tips + '</g>';
+  }
+
+  // Legend table rendered below the SVG mapping dot numbers to system names.
+  function buildLegend() {
+    if (scoredSystems.length === 0) return '';
+    const rows = scoredSystems.map(function(sys, idx) {
+      const res = sys.result;
+      const col = DOT_COLOURS[idx % DOT_COLOURS.length];
+      const statusMeta = STATUS_META[res.status || STATUS.UNSCORED];
+      return '<tr class="govuk-table__row">'
+        + '<td class="govuk-table__cell" style="width:2.5rem;vertical-align:middle;padding-top:6px;padding-bottom:6px">'
+        + '<span style="display:inline-flex;align-items:center;justify-content:center;'
+        + 'width:22px;height:22px;border-radius:50%;background:' + col + ';color:#fff;font-size:11px;font-weight:bold">'
+        + String(idx + 1) + '</span></td>'
+        + '<td class="govuk-table__cell" style="padding-top:6px;padding-bottom:6px">' + esc(sys.name) + '</td>'
+        + '<td class="govuk-table__cell" style="text-align:right;padding-top:6px;padding-bottom:6px">' + res.likelihood.total + '</td>'
+        + '<td class="govuk-table__cell" style="text-align:right;padding-top:6px;padding-bottom:6px">' + res.impact.total + '</td>'
+        + '<td class="govuk-table__cell" style="text-align:right;padding-top:6px;padding-bottom:6px"><strong>' + res.overall + '</strong></td>'
+        + '<td class="govuk-table__cell" style="padding-top:6px;padding-bottom:6px"><strong class="govuk-tag ' + statusMeta.tagClass + '">' + statusMeta.label + '</strong></td>'
+        + '</tr>';
+    }).join('');
+    return '<details class="govuk-details govuk-!-margin-top-3" open>'
+      + '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">System key \u2014 ' + scoredSystems.length + ' system' + (scoredSystems.length !== 1 ? 's' : '') + ' plotted</span></summary>'
+      + '<div class="govuk-details__text govuk-!-padding-top-2"><div style="overflow-x:auto">'
+      + '<table class="govuk-table govuk-!-margin-bottom-0" style="font-size:14px">'
+      + '<thead class="govuk-table__head"><tr class="govuk-table__row">'
+      + '<th class="govuk-table__header" scope="col" style="width:2.5rem">#</th>'
+      + '<th class="govuk-table__header" scope="col">System name</th>'
+      + '<th class="govuk-table__header" scope="col" style="text-align:right">Likelihood</th>'
+      + '<th class="govuk-table__header" scope="col" style="text-align:right">Impact</th>'
+      + '<th class="govuk-table__header" scope="col" style="text-align:right">Overall</th>'
+      + '<th class="govuk-table__header" scope="col">Status</th>'
+      + '</tr></thead>'
+      + '<tbody class="govuk-table__body">' + rows + '</tbody>'
+      + '</table></div></div></details>';
   }
 
   const medPts  = zonePoly(THRESHOLDS.mediumMinScore);
   const highPts = zonePoly(THRESHOLDS.highMinScore);
   const redPts  = zonePoly(THRESHOLDS.redRatedMinScore);
   const dots = buildSystemDots();
+  const legend = buildLegend();
 
   return '<h3 class="govuk-heading-s govuk-!-margin-top-4">Risk matrix</h3>'
     + '<div class="app-risk-matrix-container">'
     + '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg"'
     + ' style="font-family:GDS Transport,arial,sans-serif;display:block;width:100%">'
-    + '<style>.rml{font-size:11px;fill:#444}.rmtitle{font-size:13px;fill:#111;font-weight:bold}.rmaxis{font-size:12px;fill:#111;font-weight:bold}</style>'
+    + '<style>'
+    + '.rml{font-size:11px;fill:#444}.rmtitle{font-size:13px;fill:#111;font-weight:bold}.rmaxis{font-size:12px;fill:#111;font-weight:bold}'
+    + '.rm-dot{cursor:pointer}.rm-tip{visibility:hidden;pointer-events:none}'
+    + '.rm-dot:hover .rm-tip,.rm-dot:focus .rm-tip{visibility:visible}'
+    + '</style>'
     // Plot background
     + '<rect x="'+ml+'" y="'+mt+'" width="'+pw+'" height="'+ph+'" fill="#f0f0f0"/>'
     // Zones — painted back to front (medium first, red last)
@@ -975,7 +1147,8 @@ function renderRiskMatrix(portfolio) {
     + '<text x="'+toX(2.85).toFixed(1)+'" y="'+toY(4.72).toFixed(1)+'" style="font-size:10px;font-weight:bold;fill:#fff">High</text>'
     + '<text x="'+toX(4.6).toFixed(1)+'"  y="'+toY(4.72).toFixed(1)+'" style="font-size:10px;font-weight:bold;fill:#fff">Red-Rated</text>'
     + dots
-    + '</svg></div>';
+    + '</svg></div>'
+    + legend;
 }
 
 // ---------------------------------------------------------------------------
@@ -1153,6 +1326,44 @@ function esc(str) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ---------------------------------------------------------------------------
+// Helpers for criterion extra data fields
+// ---------------------------------------------------------------------------
+function renderExamplesPanel(criterion) {
+  if (!criterion.examples || !criterion.examples.length) return '';
+  return '<details class="govuk-details" style="margin-bottom:1rem">'
+    + '<summary class="govuk-details__summary">'
+    + '<span class="govuk-details__summary-text">What to look for when scoring ' + criterion.code + '</span></summary>'
+    + '<div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">'
+    + criterion.examples.map(function(ex){ return '<li>' + ex + '</li>'; }).join('')
+    + '</ul></div></details>';
+}
+
+function renderExtraField(criterion, draft) {
+  if (!criterion.extraField) return '';
+  var ef = criterion.extraField;
+  var currentVal = draft[ef.key] || '';
+  var html = '<div class="govuk-form-group" style="margin-top:1.5rem">'
+    + '<label class="govuk-label govuk-label--s" for="ef-' + ef.key + '">' + ef.label + '</label>';
+  if (ef.hint) html += '<div class="govuk-hint">' + ef.hint + '</div>';
+  if (ef.type === 'select') {
+    html += '<select class="govuk-select" id="ef-' + ef.key + '" name="ef-' + ef.key + '">';
+    ef.options.forEach(function(opt) {
+      html += '<option value="' + esc(opt.value) + '"' + (currentVal === opt.value ? ' selected' : '') + '>' + esc(opt.label) + '</option>';
+    });
+    html += '</select>';
+  } else if (ef.type === 'textarea') {
+    html += '<textarea class="govuk-textarea" id="ef-' + ef.key + '" name="ef-' + ef.key + '" rows="' + (ef.rows || 2) + '">' + esc(currentVal) + '</textarea>';
+  } else {
+    html += '<input class="govuk-input ' + (ef.inputClass || '') + '" id="ef-' + ef.key + '" name="ef-' + ef.key + '" type="' + ef.type + '" value="' + esc(currentVal) + '"';
+    if (ef.min !== undefined) html += ' min="' + ef.min + '"';
+    if (ef.max !== undefined) html += ' max="' + ef.max + '"';
+    html += '>';
+  }
+  html += '</div>';
+  return html;
+}
+
 // ===== app.js =====
 /**
  * app.js — wizard version
@@ -1184,12 +1395,15 @@ function emptyDraft() {
   LIKELIHOOD_CRITERIA.forEach(function(c){ lScores[c.code] = 0; });
   IMPACT_CRITERIA.forEach(function(c){ iScores[c.code] = 0; });
   return {
-    name: '', department: '', assessor: '', dateAssessed: '',
+    name: '', department: '', assessor: '', systemOwner: '', dateAssessed: '',
     description: '', legacyComponents: '', services: '',
     likelihoodScores: lScores,
     impactScores: iScores,
+    contractExpiryDate: '', keyPersonRisk: '', capabilityGaps: '',
+    hostingType: '', lastSecurityAssessment: '', majorIncidents24m: '',
     hasRemediationPlan: '', remediationFunded: '',
     targetResolutionDate: '', estimatedCostChange: '', notes: '',
+    remediationMilestones: '',
     _lastStep: 1,
   };
 }
@@ -1425,10 +1639,10 @@ function captureSystemDetails() {
   const assessor   = fieldVal('sys-assessor');
   const date       = fieldVal('sys-date');
   const errors = [];
-  if (name === '')       errors.push('Enter the asset name');
-  if (department === '') errors.push('Enter the department');
-  if (assessor === '')   errors.push('Enter the assessor name');
-  if (date === '')       errors.push('Enter the date assessed');
+  if (name === '')       errors.push({ msg: 'Enter the asset name', fieldId: 'sys-name' });
+  if (department === '') errors.push({ msg: 'Enter the department', fieldId: 'sys-dept' });
+  if (assessor === '')   errors.push({ msg: 'Enter the assessor name', fieldId: 'sys-assessor' });
+  if (date === '')       errors.push({ msg: 'Enter the date assessed', fieldId: 'sys-date' });
   if (errors.length) {
     showStepError(errors);
     return false;
@@ -1436,6 +1650,7 @@ function captureSystemDetails() {
   wizardDraft.name          = name;
   wizardDraft.department    = department;
   wizardDraft.assessor      = assessor;
+  wizardDraft.systemOwner   = fieldVal('sys-owner');
   wizardDraft.dateAssessed  = date;
   wizardDraft.description   = fieldVal('sys-description');
   wizardDraft.legacyComponents = fieldVal('sys-legacy-components');
@@ -1447,7 +1662,8 @@ function captureCriterionStep(meta) {
   const name    = meta.cat + '-' + meta.criterion.code;
   const checked = document.querySelector('input[name="' + name + '"]:checked');
   if (!checked) {
-    showStepError(['Select a score before continuing']);
+    var firstRadioId = name + '-' + meta.criterion.levels[0].score;
+    showStepError([{ msg: 'Select a score for ' + meta.criterion.code + ' before continuing', fieldId: firstRadioId, formGroupId: 'fg-criterion' }]);
     return false;
   }
   const score = parseInt(checked.value, 10);
@@ -1455,6 +1671,9 @@ function captureCriterionStep(meta) {
     wizardDraft.likelihoodScores[meta.criterion.code] = score;
   } else {
     wizardDraft.impactScores[meta.criterion.code] = score;
+  }
+  if (meta.criterion.extraField) {
+    wizardDraft[meta.criterion.extraField.key] = fieldVal('ef-' + meta.criterion.extraField.key);
   }
   return true;
 }
@@ -1467,24 +1686,83 @@ function captureRemediationStep() {
   wizardDraft.targetResolutionDate = fieldVal('sys-target-date');
   wizardDraft.estimatedCostChange  = fieldVal('sys-cost-change');
   wizardDraft.notes                = fieldVal('sys-notes');
+  wizardDraft.remediationMilestones = fieldVal('sys-milestones');
   return true;
 }
 
 // ---------------------------------------------------------------------------
-// Error display
+// Error display — GOV.UK Design System compliant
+// errors: array of { msg, fieldId, formGroupId? }
 // ---------------------------------------------------------------------------
-function showStepError(messages) {
-  const container = document.getElementById('wizard-container');
+function clearStepErrors() {
+  var container = document.getElementById('wizard-container');
   if (!container) return;
-  const existing = container.querySelector('.app-wizard-error');
+  var existing = container.querySelector('.app-wizard-error');
   if (existing) existing.remove();
-  const items = messages.map(function(m){ return '<li class="govuk-error-summary__list-item">' + m + '</li>'; }).join('');
-  const html = '<div class="govuk-error-summary app-wizard-error" data-module="govuk-error-summary" role="alert" tabindex="-1">'
-    + '<div role="alert"><div class="govuk-error-summary__body">'
+  // Remove inline error messages and error states from previous validation
+  container.querySelectorAll('.govuk-form-group--error').forEach(function(fg) {
+    fg.classList.remove('govuk-form-group--error');
+  });
+  container.querySelectorAll('.govuk-error-message').forEach(function(em) {
+    em.remove();
+  });
+  container.querySelectorAll('.govuk-input--error').forEach(function(el) {
+    el.classList.remove('govuk-input--error');
+  });
+  container.querySelectorAll('.govuk-select--error').forEach(function(el) {
+    el.classList.remove('govuk-select--error');
+  });
+  container.querySelectorAll('.govuk-textarea--error').forEach(function(el) {
+    el.classList.remove('govuk-textarea--error');
+  });
+}
+
+function showStepError(errors) {
+  var container = document.getElementById('wizard-container');
+  if (!container) return;
+  clearStepErrors();
+
+  // 1. Build GOV.UK error summary with anchor links
+  var items = errors.map(function(e) {
+    return '<li><a href="#' + e.fieldId + '">' + e.msg + '</a></li>';
+  }).join('');
+  var summaryHtml = '<div class="govuk-error-summary app-wizard-error" data-module="govuk-error-summary" tabindex="-1">'
+    + '<div role="alert">'
+    + '<h2 class="govuk-error-summary__title">There is a problem</h2>'
+    + '<div class="govuk-error-summary__body">'
     + '<ul class="govuk-list govuk-error-summary__list">' + items + '</ul>'
     + '</div></div></div>';
-  container.insertAdjacentHTML('afterbegin', html);
+  container.insertAdjacentHTML('afterbegin', summaryHtml);
   container.querySelector('.app-wizard-error').focus();
+
+  // 2. Add inline error messages and error styling on each affected field
+  errors.forEach(function(e) {
+    var fgId = e.formGroupId || ('fg-' + e.fieldId);
+    var fg = document.getElementById(fgId);
+    if (!fg) return;
+    fg.classList.add('govuk-form-group--error');
+    // Insert inline error message before the input/select/textarea
+    var errMsg = document.createElement('p');
+    errMsg.className = 'govuk-error-message';
+    errMsg.id = e.fieldId + '-error';
+    errMsg.innerHTML = '<span class="govuk-visually-hidden">Error:</span> ' + e.msg;
+    // For radio/checkbox groups, insert error after the legend, before the radios div
+    var radiosDiv = fg.querySelector('.govuk-radios, .govuk-checkboxes');
+    if (radiosDiv) {
+      radiosDiv.parentNode.insertBefore(errMsg, radiosDiv);
+      var fieldset = fg.querySelector('fieldset');
+      if (fieldset) fieldset.setAttribute('aria-describedby', e.fieldId + '-error');
+    } else {
+      var input = fg.querySelector('input, select, textarea');
+      if (input) {
+        input.parentNode.insertBefore(errMsg, input);
+        input.setAttribute('aria-describedby', e.fieldId + '-error');
+        if (input.tagName === 'SELECT') input.classList.add('govuk-select--error');
+        else if (input.tagName === 'TEXTAREA') input.classList.add('govuk-textarea--error');
+        else input.classList.add('govuk-input--error');
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1495,17 +1773,25 @@ function buildSystemFromDraft(draft, existingIdx, result) {
     name:                draft.name,
     department:          draft.department,
     assessor:            draft.assessor,
+    systemOwner:         draft.systemOwner,
     dateAssessed:        draft.dateAssessed,
     description:         draft.description,
     legacyComponents:    draft.legacyComponents,
     services:            draft.services,
     likelihoodScores:    Object.assign({}, draft.likelihoodScores),
     impactScores:        Object.assign({}, draft.impactScores),
+    contractExpiryDate:  draft.contractExpiryDate,
+    keyPersonRisk:       draft.keyPersonRisk,
+    capabilityGaps:      draft.capabilityGaps,
+    hostingType:         draft.hostingType,
+    lastSecurityAssessment: draft.lastSecurityAssessment,
+    majorIncidents24m:   draft.majorIncidents24m,
     hasRemediationPlan:  draft.hasRemediationPlan,
     remediationFunded:   draft.remediationFunded,
     targetResolutionDate: draft.targetResolutionDate,
     estimatedCostChange: draft.estimatedCostChange,
     notes:               draft.notes,
+    remediationMilestones: draft.remediationMilestones,
     result:              result,
   };
 }
@@ -1515,15 +1801,23 @@ function systemToDraft(sys) {
   d.name                 = sys.name           || '';
   d.department           = sys.department     || '';
   d.assessor             = sys.assessor       || '';
+  d.systemOwner          = sys.systemOwner    || '';
   d.dateAssessed         = sys.dateAssessed   || '';
   d.description          = sys.description    || '';
   d.legacyComponents     = sys.legacyComponents || '';
   d.services             = sys.services       || '';
-  d.hasRemediationPlan   = sys.hasRemediationPlan  || '';
-  d.remediationFunded    = sys.remediationFunded   || '';
-  d.targetResolutionDate = sys.targetResolutionDate || '';
-  d.estimatedCostChange  = sys.estimatedCostChange || '';
-  d.notes                = sys.notes          || '';
+  d.contractExpiryDate   = sys.contractExpiryDate  || '';
+  d.keyPersonRisk        = sys.keyPersonRisk       || '';
+  d.capabilityGaps       = sys.capabilityGaps      || '';
+  d.hostingType          = sys.hostingType         || '';
+  d.lastSecurityAssessment = sys.lastSecurityAssessment || '';
+  d.majorIncidents24m    = sys.majorIncidents24m   || '';
+  d.hasRemediationPlan      = sys.hasRemediationPlan      || '';
+  d.remediationFunded       = sys.remediationFunded       || '';
+  d.targetResolutionDate    = sys.targetResolutionDate    || '';
+  d.estimatedCostChange     = sys.estimatedCostChange     || '';
+  d.notes                   = sys.notes                   || '';
+  d.remediationMilestones   = sys.remediationMilestones   || '';
   if (sys.likelihoodScores) Object.assign(d.likelihoodScores, sys.likelihoodScores);
   if (sys.impactScores)     Object.assign(d.impactScores,     sys.impactScores);
   d._lastStep = 1;
@@ -1750,6 +2044,20 @@ document.addEventListener('DOMContentLoaded', function() {
   if (assessContainer) {
     renderWizardShell(assessContainer);
     goToStep(0);
+  }
+
+  // Header logo — navigate to the app home (assess tab, step 0)
+  const headerHomeLink = document.getElementById('header-home-link');
+  if (headerHomeLink) {
+    headerHomeLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      switchToAssessTab();
+      wizardDraft = emptyDraft();
+      editingPortfolioIdx = -1;
+      returnToSummaryAfterStep = false;
+      clearDraftFromStorage();
+      goToStep(0);
+    });
   }
 
   // Tabs
