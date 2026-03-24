@@ -15,7 +15,7 @@ Each criterion is scored 1–6. The overall risk score is `likelihood_total × i
 
 ## Usage
 
-Open `index.html` directly in a browser — no build step or server required.
+Open `index.html` directly in a browser - no build step or server required.
 
 ```
 open "index.html"
